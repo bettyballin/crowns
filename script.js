@@ -466,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Save current board state before making changes
         saveCurrentBoardState();
         
-        // Toggle between empty, X, and crown
+        // Click cycle: Empty -> X -> Crown -> Empty
         const currentState = gameBoard[row][col];
         
         if (currentState === null) {
@@ -581,9 +581,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentState === null) {
             // If empty, we'll add X's
             dragAction = 'addX';
+            
+            // Apply to the starting cell
+            gameBoard[row][col] = 'x';
+            cellElements[row][col].classList.add('x');
+            cellElements[row][col].classList.remove('crown');
         } else if (currentState === 'x' || currentState === 'crown') {
             // If there's an X or crown, we'll clear cells
             dragAction = 'clear';
+            
+            // Apply to the starting cell
+            gameBoard[row][col] = null;
+            cellElements[row][col].classList.remove('x', 'crown');
         }
     }
     

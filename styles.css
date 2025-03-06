@@ -79,6 +79,7 @@ button.active {
 .timer {
     font-size: 1.2rem;
     margin: 0 auto;
+    padding-right: 50px;
 }
 
 .hint-btn {
@@ -133,19 +134,19 @@ button.active {
 
 /* Border removal classes for cells in the same region */
 .cell.no-top-border {
-    border-top: none;
+    border-top: 2px solid white;;
 }
 
 .cell.no-right-border {
-    border-right: none;
+    border-right: 2px solid white;;
 }
 
 .cell.no-bottom-border {
-    border-bottom: none;
+    border-bottom: 2px solid white;;
 }
 
 .cell.no-left-border {
-    border-left: none;
+    border-left: 2px solid white;;
 }
 
 .cell:hover {
