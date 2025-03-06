@@ -16,10 +16,14 @@ body {
 }
 
 .game-container {
-    max-width: 600px;
+    max-width: 800px;
     width: 100%;
     text-align: center;
     position: relative;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 h1 {
@@ -61,8 +65,15 @@ button.active {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     position: relative;
+}
+
+.game-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
 .timer {
@@ -93,11 +104,15 @@ button.active {
 .game-board {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 2px;
-    margin: 0 auto;
-    max-width: 500px;
-    aspect-ratio: 1/1;
+    gap: 0;
+    margin: 30px auto;
+    width: 600px;
+    height: 600px;
     background-color: white;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    padding: 4px;
+    box-sizing: border-box;
 }
 
 .cell {
@@ -110,7 +125,27 @@ button.active {
     cursor: pointer;
     user-select: none;
     position: relative;
-    border: 2px solid transparent;
+    border: 4px solid white;
+    box-sizing: border-box;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Border removal classes for cells in the same region */
+.cell.no-top-border {
+    border-top: none;
+}
+
+.cell.no-right-border {
+    border-right: none;
+}
+
+.cell.no-bottom-border {
+    border-bottom: none;
+}
+
+.cell.no-left-border {
+    border-left: none;
 }
 
 .cell:hover {
@@ -219,11 +254,15 @@ li {
 /* Medium difficulty (5x5) */
 .difficulty-medium .game-board {
     grid-template-columns: repeat(5, 1fr);
+    width: 600px;
+    height: 600px;
 }
 
 /* Hard difficulty (6x6) */
 .difficulty-hard .game-board {
     grid-template-columns: repeat(6, 1fr);
+    width: 600px;
+    height: 600px;
 }
 
 /* Responsive styles */
@@ -268,6 +307,23 @@ li {
     0% { border-color: yellow; }
     50% { border-color: transparent; }
     100% { border-color: yellow; }
+}
+
+/* Hidden solution button */
+.hidden-btn {
+    background-color: #172a45; /* Same as other buttons */
+    opacity: 0.5;
+    font-size: 0.8rem;
+    color: #64ffda;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.hidden-btn:hover {
+    opacity: 0.8;
 }
 
 /* Animation for when puzzle is solved */

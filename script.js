@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dragAction = null;
     let gameStarted = false;
     let solution = [];
+    let gameBoardHistory = []; // To store previous board state for revert
     
     // DOM Elements
     const gameBoardElement = document.getElementById('game-board');
@@ -18,6 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const mediumBtn = document.getElementById('medium-btn');
     const hardBtn = document.getElementById('hard-btn');
     const hintBtn = document.getElementById('hint-btn');
+    const revertBtn = document.getElementById('revert-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const solutionBtn = document.getElementById('solution-btn');
     const rulesBtn = document.getElementById('rules-btn');
     const rulesModal = document.getElementById('rules-modal');
     const winModal = document.getElementById('win-modal');
@@ -33,6 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
     mediumBtn.addEventListener('click', () => setDifficulty('medium'));
     hardBtn.addEventListener('click', () => setDifficulty('hard'));
     hintBtn.addEventListener('click', showHint);
+    revertBtn.addEventListener('click', revertBoard);
+    clearBtn.addEventListener('click', clearBoard);
+    solutionBtn.addEventListener('click', showSolution);
     rulesBtn.addEventListener('click', () => rulesModal.style.display = 'block');
     closeBtn.addEventListener('click', () => rulesModal.style.display = 'none');
     playAgainBtn.addEventListener('click', () => {
@@ -58,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         timeElement.textContent = '0s';
         gameStarted = false;
         hintBtn.disabled = true;
+        gameBoardHistory = []; // Reset history
         
         // Generate game board
         generateBoard();
@@ -157,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const row = Math.floor(cellIndex / boardSize);
                     const col = cellIndex % boardSize;
                     
-                    // Check adjacent cells
+                    // Check adjacent cells (only orthogonally, not diagonally)
                     const neighbors = [
                         [row - 1, col], // up
                         [row + 1, col], // down
@@ -193,14 +201,58 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             if (chosenRegion === -1) {
-                // No valid frontier found, just assign remaining cells randomly
-                for (let region = 0; region < numRegions; region++) {
-                    while (regionSizes[region] > 0 && cells.length > 0) {
-                        const randomIndex = Math.floor(Math.random() * cells.length);
-                        const randomCell = cells[randomIndex];
-                        cells.splice(randomIndex, 1);
-                        regionAssignments[randomCell] = region;
-                        regionSizes[region]--;
+                // No valid frontier found, try to find any cells adjacent to a region
+                const remainingCells = cells.map(cellIndex => {
+                    const row = Math.floor(cellIndex / boardSize);
+                    const col = cellIndex % boardSize;
+                    const adjacentRegions = [];
+                    
+                    // Check neighbors
+                    const neighbors = [
+                        [row - 1, col], // up
+                        [row + 1, col], // down
+                        [row, col - 1], // left
+                        [row, col + 1]  // right
+                    ];
+                    
+                    for (const [adjRow, adjCol] of neighbors) {
+                        if (adjRow >= 0 && adjRow < boardSize && adjCol >= 0 && adjCol < boardSize) {
+                            const adjIndex = adjRow * boardSize + adjCol;
+                            const adjRegion = regionAssignments[adjIndex];
+                            if (adjRegion !== -1) {
+                                adjacentRegions.push(adjRegion);
+                            }
+                        }
+                    }
+                    
+                    return { cellIndex, adjacentRegions };
+                }).filter(cell => cell.adjacentRegions.length > 0);
+                
+                // If there are cells adjacent to regions, prefer those
+                if (remainingCells.length > 0) {
+                    const randomCell = remainingCells[Math.floor(Math.random() * remainingCells.length)];
+                    const region = randomCell.adjacentRegions[0]; // Pick the first region
+                    regionAssignments[randomCell.cellIndex] = region;
+                    const cellIndex = cells.indexOf(randomCell.cellIndex);
+                    cells.splice(cellIndex, 1);
+                    
+                    // Update the region size
+                    for (let i = 0; i < numRegions; i++) {
+                        if (regionSizes[i] > 0) {
+                            regionSizes[i]--;
+                            break;
+                        }
+                    }
+                } else {
+                    // If no cells are adjacent to any region, just assign randomly
+                    for (let region = 0; region < numRegions; region++) {
+                        while (regionSizes[region] > 0 && cells.length > 0) {
+                            const randomIndex = Math.floor(Math.random() * cells.length);
+                            const randomCell = cells[randomIndex];
+                            cells.splice(randomIndex, 1);
+                            regionAssignments[randomCell] = region;
+                            regionSizes[region]--;
+                        }
                     }
                 }
             } else {
@@ -360,9 +412,35 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let row = 0; row < boardSize; row++) {
             for (let col = 0; col < boardSize; col++) {
                 const cell = document.createElement('div');
-                cell.className = `cell region-${regions[row][col]}`;
+                const regionId = regions[row][col];
+                
+                cell.className = `cell region-${regionId}`;
                 cell.dataset.row = row;
                 cell.dataset.col = col;
+                
+                // Add border classes for cells in the same region
+                // Check the four neighboring cells (top, right, bottom, left)
+                const topRow = row - 1;
+                const bottomRow = row + 1;
+                const leftCol = col - 1;
+                const rightCol = col + 1;
+                
+                // Add border classes
+                if (topRow >= 0 && regions[topRow][col] === regionId) {
+                    cell.classList.add('no-top-border');
+                }
+                
+                if (rightCol < boardSize && regions[row][rightCol] === regionId) {
+                    cell.classList.add('no-right-border');
+                }
+                
+                if (bottomRow < boardSize && regions[bottomRow][col] === regionId) {
+                    cell.classList.add('no-bottom-border');
+                }
+                
+                if (leftCol >= 0 && regions[row][leftCol] === regionId) {
+                    cell.classList.add('no-left-border');
+                }
                 
                 cell.addEventListener('click', () => handleCellClick(row, col));
                 cell.addEventListener('mousedown', () => handleDragStart(row, col));
@@ -384,6 +462,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!gameStarted) {
             startTimer();
         }
+        
+        // Save current board state before making changes
+        saveCurrentBoardState();
         
         // Toggle between empty, X, and crown
         const currentState = gameBoard[row][col];
@@ -408,9 +489,91 @@ document.addEventListener('DOMContentLoaded', () => {
         checkWinCondition();
     }
     
+    // Save the current board state for revert functionality
+    function saveCurrentBoardState() {
+        const currentState = gameBoard.map(row => [...row]);
+        gameBoardHistory.push(currentState);
+        
+        // Limit history to 10 states to prevent memory issues
+        if (gameBoardHistory.length > 10) {
+            gameBoardHistory.shift();
+        }
+    }
+    
+    // Revert to the previous board state
+    function revertBoard() {
+        if (gameBoardHistory.length === 0) return;
+        
+        // Get previous state
+        const previousState = gameBoardHistory.pop();
+        
+        // Update gameBoard with previous state
+        gameBoard = previousState.map(row => [...row]);
+        
+        // Update UI to match
+        for (let row = 0; row < boardSize; row++) {
+            for (let col = 0; col < boardSize; col++) {
+                const cell = cellElements[row][col];
+                const state = gameBoard[row][col];
+                
+                // Reset classes
+                cell.classList.remove('x', 'crown');
+                
+                // Apply correct class based on state
+                if (state === 'x') {
+                    cell.classList.add('x');
+                } else if (state === 'crown') {
+                    cell.classList.add('crown');
+                }
+            }
+        }
+    }
+    
+    // Clear all marks from the board
+    function clearBoard() {
+        // Save current state before clearing
+        saveCurrentBoardState();
+        
+        // Reset all cells to empty
+        for (let row = 0; row < boardSize; row++) {
+            for (let col = 0; col < boardSize; col++) {
+                gameBoard[row][col] = null;
+                cellElements[row][col].classList.remove('x', 'crown');
+            }
+        }
+    }
+    
+    // Show the solution
+    function showSolution() {
+        // Save current state before showing solution
+        saveCurrentBoardState();
+        
+        // Set the board to match the solution
+        for (let row = 0; row < boardSize; row++) {
+            for (let col = 0; col < boardSize; col++) {
+                const cell = cellElements[row][col];
+                
+                // Reset classes
+                cell.classList.remove('x', 'crown');
+                
+                if (solution[row][col]) {
+                    // This cell should have a crown in the solution
+                    gameBoard[row][col] = 'crown';
+                    cell.classList.add('crown');
+                } else {
+                    // This cell should not have a crown
+                    gameBoard[row][col] = null;
+                }
+            }
+        }
+    }
+    
     // Handle mouse down for drag operations
     function handleDragStart(row, col) {
         isDragging = true;
+        
+        // Save current state before drag operation
+        saveCurrentBoardState();
         
         // Determine action based on current cell state
         if (gameBoard[row][col] === 'crown') {
