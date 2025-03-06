@@ -576,22 +576,36 @@ document.addEventListener('DOMContentLoaded', () => {
         saveCurrentBoardState();
         
         // Determine action based on current cell state
-        if (gameBoard[row][col] === 'crown') {
-            dragAction = 'remove';
-        } else {
-            // No specific drag action when starting from empty or X cell
-            dragAction = null;
+        const currentState = gameBoard[row][col];
+        
+        if (currentState === null) {
+            // If empty, we'll add X's
+            dragAction = 'addX';
+        } else if (currentState === 'x' || currentState === 'crown') {
+            // If there's an X or crown, we'll clear cells
+            dragAction = 'clear';
         }
     }
     
     // Handle mouse over during drag
     function handleDragOver(row, col) {
-        if (!isDragging || dragAction === null) return;
+        if (!isDragging) return;
         
-        if (dragAction === 'remove' && gameBoard[row][col] === 'crown') {
-            // Remove crown
-            gameBoard[row][col] = null;
-            cellElements[row][col].classList.remove('x', 'crown');
+        switch (dragAction) {
+            case 'addX':
+                // Add X to empty cells
+                if (gameBoard[row][col] === null) {
+                    gameBoard[row][col] = 'x';
+                    cellElements[row][col].classList.add('x');
+                    cellElements[row][col].classList.remove('crown');
+                }
+                break;
+                
+            case 'clear':
+                // Clear any cell we drag over (X or crown)
+                gameBoard[row][col] = null;
+                cellElements[row][col].classList.remove('x', 'crown');
+                break;
         }
     }
     
