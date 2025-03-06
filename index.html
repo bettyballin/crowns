@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game of Crowns</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>GAME OF CROWNS</h1>
+        
+        <div class="difficulty-buttons">
+            <button id="easy-btn" class="active">EASY</button>
+            <button id="medium-btn">MEDIUM</button>
+            <button id="hard-btn">HARD</button>
+        </div>
+        
+        <div class="game-info">
+            <div class="timer">Time: <span id="time">0s</span></div>
+            <button id="hint-btn" class="hint-btn" disabled>✨</button>
+        </div>
+        
+        <div id="game-board" class="game-board"></div>
+        
+        <div id="rules-btn" class="rules-btn">?</div>
+        
+        <div id="rules-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Game Rules</h2>
+                <ul>
+                    <li>Single tap to place '✕' and tap again to place a crown 👑.</li>
+                    <li>Use '✕' to mark cells where you think it can't have crowns 👑. (optional step)</li>
+                    <li>Each row has exactly one crown 👑.</li>
+                    <li>Each column has exactly one crown 👑.</li>
+                    <li>Each color (border region) has exactly one crown 👑.</li>
+                    <li>No two crowns 👑 can touch each other (not even diagonally).</li>
+                    <li>Click and drag to remove crowns.</li>
+                </ul>
+                <p>Tip: Lookout for hint button [✨] when available (after 15 seconds).</p>
+            </div>
+        </div>
+        
+        <div id="win-modal" class="modal">
+            <div class="modal-content win-content">
+                <h2>Congratulations!</h2>
+                <p>You solved the puzzle in <span id="win-time">0s</span>!</p>
+                <button id="play-again-btn">Play Again</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
